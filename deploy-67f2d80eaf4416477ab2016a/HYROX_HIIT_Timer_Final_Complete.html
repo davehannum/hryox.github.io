@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HYROX Sunday HIIT</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #111; color: white; text-align: center; padding: 40px; }
+    h1 { font-size: 36px; margin-bottom: 20px; }
+    #status { font-size: 28px; margin: 20px 0; }
+    #timer { font-size: 100px; margin: 20px 0; color: #FFD700; }
+    button { padding: 15px 30px; font-size: 18px; margin: 5px; background: #e91e63; color: white; border: none; cursor: pointer; }
+    video { display: none; margin: 20px auto; }
+  </style>
+</head>
+<body>
+  <h1>HYROX Sunday HIIT</h1>
+  <div id="status">Press Start to Begin</div>
+  <div id="timer">00:00</div>
+  <button id="start-btn" onclick="togglePlayPause()">Start</button>
+  <button id="stop-btn" onclick="stopWorkout()">Stop</button>
+
+  <video id="video1" width="640" height="360" muted loop><source src="skierg (1).mp4"></video>
+  <video id="video2" width="640" height="360" muted loop><source src="burpee.mp4"></video>
+  <video id="video3" width="640" height="360" muted loop><source src="dumbbell_squat_press.mp4"></video>
+  <video id="video4" width="640" height="360" muted loop><source src="wall_ball_throw.mp4"></video>
+  <video id="video5" width="640" height="360" muted loop><source src="box_alternate_side_step_up.mp4"></video>
+  <video id="video6" width="640" height="360" muted loop><source src="rower (1).mp4"></video>
+  <video id="video7" width="640" height="360" muted loop><source src="alternate_lunges (1).mp4"></video>
+  <video id="video8" width="640" height="360" muted loop><source src="plank_to_push_up.mp4"></video>
+
+  <audio id="start-sound" src="https://actions.google.com/sounds/v1/alarms/boxing_bell_ring.ogg"></audio>
+  <audio id="rest-sound" src="https://actions.google.com/sounds/v1/alarms/boxing_bell_ring.ogg"></audio>
+  <audio id="end-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"></audio>
+
+<script>
+let round=1,currentExercise=1,isWorking=true,interval,timeLeft=45,isPaused=false,isRunning=false;
+const exercises=["SkiErg","Burpee Broad Jumps","Dumbbell Thrusters","Wall Balls","Lateral Box Step-Overs","Rowing Machine","Walking Lunges","Plank to Push-Up"];
+const workTime=45,restTime=15,restBetweenRounds=90,totalRounds=3;
+
+function updateDisplay(){
+  document.getElementById("timer").textContent=("0"+Math.floor(timeLeft/60)).slice(-2)+":"+("0"+timeLeft%60).slice(-2);
+}
+
+function playSound(id){document.getElementById(id).play();}
+
+function showVideo(index){
+  for(let i=1;i<=8;i++){
+    const vid=document.getElementById("video"+i);
+    if(i===index){vid.style.display="block";vid.play();}
+    else{vid.style.display="none";vid.pause();vid.currentTime=0;}
+  }
+}
+
+function nextSegment(){
+  if(isWorking){
+    isWorking=false;timeLeft=restTime;
+    document.getElementById("status").textContent="Rest - Up Next: "+exercises[currentExercise];
+    showVideo(currentExercise+1);playSound("rest-sound");
+  }else{
+    if(currentExercise<8){
+      currentExercise++;isWorking=true;timeLeft=workTime;
+      document.getElementById("status").textContent="Round "+round+" - "+exercises[currentExercise-1];
+      showVideo(currentExercise);playSound("start-sound");
+    }else if(round<totalRounds){
+      round++;currentExercise=1;isWorking=true;timeLeft=restBetweenRounds;
+      document.getElementById("status").textContent="Round "+(round-1)+" Complete - 90s Break";
+      showVideo(0);playSound("rest-sound");
+      setTimeout(()=>{
+        document.getElementById("status").textContent="Round "+round+" - "+exercises[0];
+        showVideo(1);playSound("start-sound");timeLeft=workTime;},restBetweenRounds*1000);
+    }else{stopWorkout();document.getElementById("status").textContent="Workout Complete!";playSound("end-sound");}
+  }
+}
+
+function togglePlayPause(){
+  if(!isRunning){
+    startWorkout();document.getElementById("start-btn").textContent="Pause";isRunning=true;
+  }else{
+    if(!isPaused){clearInterval(interval);isPaused=true;document.getElementById("start-btn").textContent="Resume";}
+    else{interval=setInterval(()=>{timeLeft--;updateDisplay();if(timeLeft<=0)nextSegment();},1000);
+      isPaused=false;document.getElementById("start-btn").textContent="Pause";}
+  }
+}
+
+function startWorkout(){
+  let prepTime=5;document.getElementById("status").textContent="Get Ready!";document.getElementById("timer").textContent="00:05";showVideo(0);
+  let prepInterval=setInterval(()=>{prepTime--;document.getElementById("timer").textContent="00:0"+prepTime;
+    if(prepTime<=0){clearInterval(prepInterval);beginWorkout();}},1000);
+}
+
+function beginWorkout(){
+  round=1;currentExercise=1;isWorking=true;timeLeft=workTime;
+  document.getElementById("status").textContent="Round 1 - "+exercises[0];showVideo(1);playSound("start-sound");updateDisplay();
+  interval=setInterval(()=>{timeLeft--;updateDisplay();if(timeLeft<=0)nextSegment();},1000);isRunning=true;
+}
+
+function stopWorkout(){
+  clearInterval(interval);isRunning=false;isPaused=false;
+  round=1;currentExercise=1;timeLeft=workTime;isWorking=true;
+  document.getElementById("status").textContent="Press Start to Begin";
+  document.getElementById("timer").textContent="00:00";showVideo(0);
+  document.getElementById("start-btn").textContent="Start";
+}
+</script>
+</body>
+</html>
